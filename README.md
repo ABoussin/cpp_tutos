@@ -1,3 +1,3 @@
 # cpp_tutos
 
-Just tutorial about C++
+Just tutorials answers in C++
