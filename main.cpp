@@ -4,6 +4,8 @@
 #include <iostream>
 #include <algorithm>
 #include <sstream>
+#include <cstring>
+
 using namespace std;
 
 struct Attribute {
@@ -38,8 +40,6 @@ void buildTree(Node* parent, char* nextLine, int* nbLine)
 	string tagName;
 	char escapeChar;
 
-	(*nbLine)--;
-
 	lineS >> escapeChar >> tagName;
 	result->name = tagName;
 
@@ -53,7 +53,7 @@ void buildTree(Node* parent, char* nextLine, int* nbLine)
 		lineS >> value;
 		value.pop_back(); // remove last "
 
-		cout << attrName << " " << value << "\n";
+						  //cout << attrName << " " << value << "\n";
 
 		addAttribute(result, attrName, value);
 	}
@@ -65,6 +65,7 @@ void buildTree(Node* parent, char* nextLine, int* nbLine)
 	while (*nbLine > 0)
 	{
 		cin.getline(input, 500, '>');
+		(*nbLine)--;
 		if (input[2] == '/')
 		{
 			return;
@@ -76,44 +77,103 @@ void buildTree(Node* parent, char* nextLine, int* nbLine)
 	}
 }
 
-void readTree(Node* node)
+void readTree(Node* node, int level)
 {
-	cout << node->name << " : \n";
+	cout << "level : " << level << " " << node->name << " : \n";
 
 	for (vector<Attribute>::iterator it = node->attr.begin(); it != node->attr.end(); ++it)
 	{
-		cout <<"\t"<< (*it).name << " -> " << (*it).value << "\n";
+		cout << "\t" << (*it).name << " -> " << (*it).value << "\n";
 	}
 
 	if (node->children.size() != 0)
 	{
 		for (vector<Node*>::iterator it = node->children.begin(); it != node->children.end(); ++it)
 		{
-			readTree(*it);
+			readTree(*it, level + 1);
 		}
 	}
 }
 
 string getQuerieResult(vector<char*> querie, Node * root)
 {
+	//printf("requête : %s\n", querie[0]);
 
-	for (vector<char*>::iterator it = querie.begin(); it != querie.end(); ++it)
+	// Si il n'y a pas d'enfant on n'a pas trouvé de réponse
+	if (root->children.size() == 0)
 	{
-		
+		return "Not Found!";
 	}
+	else {
+		// On récupère le noeud demandé et/ou l'attribut
+		char * pch;
+		pch = (char*)memchr(querie[0], '~', strlen(querie[0]));
+
+		char *nodeName, *attrName;
+
+		// On est en bout de requête
+		if (pch != NULL)
+		{
+			nodeName = strtok(querie[0], "~");
+			attrName = strtok(NULL, "~");
+			//printf("fin de la requête\n\trecherche : %s dans le noeud %s\n", attrName, nodeName);
+		}
+		else
+		{
+			nodeName = querie[0];
+			attrName = NULL;
+			//printf("On continue la recherche dans le noeud %s\n", nodeName);
+		}
+		// On parcours les noeuds pour trouver celui demandé
+		for (vector<Node*>::iterator it = root->children.begin(); it != root->children.end(); ++it)
+		{
+			// Le bon node
+			if ((*it)->name == nodeName)
+			{
+				//printf("On a trouvé le bon noeud\n");
+				if (attrName != NULL)
+				{
+					//printf("On recherche l'attribut\n");
+					for (vector<Attribute>::iterator itAttr = (*it)->attr.begin(); itAttr != (*it)->attr.end(); ++itAttr)
+					{
+						//printf("%s est-il le bon attribut?\n", it->name.c_str());
+						//printf("%s est l'attribut recherché\n", attrName);
+						// Le bon attribut
+						if (itAttr->name.compare(attrName) == 0)
+						{
+							//printf("attribut trouvé %s, %s", attrName, itAttr->value.c_str());
+							return itAttr->value;
+						}
+					}
+				}
+				else
+				{
+					querie.erase(querie.begin());
+					return getQuerieResult(querie, (*it));
+				}
+			}
+		}
+	}
+	// Si on a parcouru tous les attribut et tous les noeuds la recherche n'abouti pas
+	return "Not Found!";
 }
 
 int main() {
 	int n, q;
 	Node root;
 	char inputLine[500];
-	
+
 	// Get parameters
 	cin >> n >> q;
-	// Get first line
-	cin.getline(inputLine, 500, '>');
+
 	// Build tree
-	buildTree(&root, inputLine, &n);
+	while (n > 0)
+	{
+		// Get first level line
+		cin.getline(inputLine, 500, '>');
+		n--;
+		buildTree(&root, inputLine, &n);
+	}
 
 	// Get queries
 	for (int i = q; i > 0; --i)
@@ -124,12 +184,10 @@ int main() {
 		for (p = strtok(inputLine, "."); p; p = strtok(NULL, "."))
 		{
 			querie.push_back(p);
-			//printf("\"%s\"\n", p);
 		}
-
-		getQuerieResult();
+		cout << getQuerieResult(querie, &root) << "\n";
 	}
-	readTree(&root);
-	
+	//readTree(&root, 0);
+
 	return 0;
 }
