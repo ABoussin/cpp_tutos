@@ -36,3 +36,9 @@
 *.filters
 /*.vcxproj*
 /Debug
+/x64/Debug
+*.ilk
+*.log
+*.pdb
+*.idb
+*.pdb
