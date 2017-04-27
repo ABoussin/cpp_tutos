@@ -5,8 +5,11 @@
 #include <algorithm>
 #include <sstream>
 #include <cstring>
+#include <fstream>
 
 using namespace std;
+
+ifstream fileStream("C:\\Users\\a.boussin\\Work\\DEV\\cpp\\cpp_tutos\\C++_String_attibute_parser_hackerrank\\testcase4_input.txt");
 
 // Attribute structure for each node
 struct Attribute {
@@ -69,13 +72,13 @@ void buildBranch(Node* parent, char* nextLine, int* nbLine)
 		addAttribute(result, attrName, value);
 	}
 
-	addNode(parent, result);
+	addChildNode(parent, result);
 
 	//continue while end char is reached /  from </node>
 	char input[500];
 	while (*nbLine > 0)
 	{
-		cin.getline(input, 500, '>');
+		fileStream.getline(input, 500, '>');
 		(*nbLine)--;
 		if (input[2] == '/')
 		{
@@ -83,7 +86,7 @@ void buildBranch(Node* parent, char* nextLine, int* nbLine)
 		}
 		else
 		{
-			buildTree(result, input, nbLine);
+			buildBranch(result, input, nbLine);
 		}
 	}
 }
@@ -154,7 +157,7 @@ string getQueryResult(vector<char*> querie, Node * root)
 				else
 				{
 					querie.erase(querie.begin()); // Delete the current querie "node"
-					return getQuerieResult(querie, (*it));
+					return getQueryResult(querie, (*it));
 				}
 			}
 		}
@@ -164,18 +167,21 @@ string getQueryResult(vector<char*> querie, Node * root)
 }
 
 int main() {
+
+	//ifstream inputFile("C:\Users\\a.boussin\\Work\\DEV\\cpp\\cpp_tutos\\C++_String_attibute_parser_hackerrank\\testcase4_input.txt");
+
 	int n, q;
 	Node root;
 	char inputLine[500];
 
 	// Get parameters
-	cin >> n >> q;
+	fileStream >> n >> q;
 
 	// Build tree
 	while (n > 0)
 	{
 		// Get first level line
-		cin.getline(inputLine, 500, '>');
+		fileStream.getline(inputLine, 500, '>');
 		n--;
 		buildBranch(&root, inputLine, &n);
 	}
@@ -184,7 +190,7 @@ int main() {
 	for (int i = q; i > 0; --i)
 	{
 		char* p;
-		cin >> inputLine;
+		fileStream >> inputLine;
 		vector<char*> querie;
 		for (p = strtok(inputLine, "."); p; p = strtok(NULL, "."))
 		{
